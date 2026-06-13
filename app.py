@@ -1031,16 +1031,15 @@ if menu == "1. Overview Kualitas Udara":
     with c1:
         metric_card("Rata-rata ISPU harian", format_number(avg_daily_ispu, 1), "Rata-rata nilai ISPU pada 1 tahun terakhir.", "📈", "#2563EB", "#DBEAFE")
     with c2:
-        metric_card("Tidak sehat+", format_percent(unhealthy_pct, 1), "Porsi catatan kategori Tidak Sehat atau lebih buruk pada 1 tahun terakhir.", "⚠️", "#F97316", "#FFEDD5")
+        metric_card("Tidak sehat+", format_percent(unhealthy_pct, 1), "Kategori Tidak Sehat atau lebih buruk pada 1 tahun terakhir.", "⚠️", "#F97316", "#FFEDD5")
     with c3:
         metric_card("Pencemar dominan", dominant_label, f"Muncul {format_int(dominant_count)} kali pada 1 tahun terakhir.", "🌫️", "#7C3AED", "#F3E8FF")
     with c4:
         metric_card("Stasiun terpantau", format_int(station_count), "Jumlah SPKU aktif pada 1 tahun terakhir.", "📍", "#16A34A", "#DCFCE7")
 
     mini_note(
-        f"KPI utama dihitung dari 1 tahun terakhir dalam rentang filter aktif "
-        f"({pd.to_datetime(kpi_start_date).strftime('%d %b %Y')} - {pd.to_datetime(latest_date).strftime('%d %b %Y')}). "
-        "Visualisasi lainnya tetap mengikuti filter data pada sidebar."
+        f"KPI utama dihitung dari 1 tahun terakhir dalam rentang "
+        f"({pd.to_datetime(kpi_start_date).strftime('%d %b %Y')} - {pd.to_datetime(latest_date).strftime('%d %b %Y')})."
     )
 
     latest_station = dff[dff["tanggal"] == latest_date].sort_values(["stasiun"]).copy()
@@ -1284,7 +1283,7 @@ elif menu == "2. Tren Temporal Kualitas Udara":
         metric_card(
             "Perubahan",
             format_number(change, 1),
-            "Selisih rata-rata ISPU akhir terhadap awal pada 1 tahun terakhir.",
+            "Selisih rata-rata ISPU pada 1 tahun terakhir.",
             "↕️",
             "#F97316",
             "#FFEDD5",
@@ -1300,9 +1299,8 @@ elif menu == "2. Tren Temporal Kualitas Udara":
         )
 
     mini_note(
-        f"KPI temporal dihitung dari 1 tahun terakhir dalam rentang filter aktif "
-        f"({pd.to_datetime(temporal_kpi_start_date).strftime('%d %b %Y')} - {pd.to_datetime(latest_date_temporal).strftime('%d %b %Y')}). "
-        "Grafik tren rata-rata ISPU mengikuti filter sidebar dan granularitas waktu yang dipilih, sedangkan grafik risiko Tidak Sehat+ dibuat bulanan untuk 1 tahun terakhir dari data terfilter."
+        f"KPI utama dihitung dari 1 tahun terakhir dalam rentang "
+        f"({pd.to_datetime(temporal_kpi_start_date).strftime('%d %b %Y')} - {pd.to_datetime(latest_date_temporal).strftime('%d %b %Y')})."
     )
 
     st.markdown("<div class='sidebar-section-label'>Pilih granularitas waktu</div>", unsafe_allow_html=True)
@@ -1330,7 +1328,7 @@ elif menu == "2. Tren Temporal Kualitas Udara":
 
     with st.container(border=True):
         st.markdown("<div class='chart-title'>Tren rata-rata ISPU</div>", unsafe_allow_html=True)
-        st.markdown("<div class='chart-subtitle'>Default menampilkan rata-rata seluruh stasiun. Pilih stasiun pembanding untuk melihat tren lokasi tertentu. Garis putus-putus menunjukkan ambang masuk kategori Tidak Sehat (ISPU > 100).</div>", unsafe_allow_html=True)
+        st.markdown("<div class='chart-subtitle'>Menampilkan rata-rata seluruh stasiun. Pilih stasiun pembanding untuk melihat tren lokasi tertentu. Garis putus-putus menunjukkan ambang masuk kategori Tidak Sehat (ISPU > 100).</div>", unsafe_allow_html=True)
 
         station_compare_options = sorted(dff["stasiun"].dropna().unique().tolist())
         selected_compare_stations = st.multiselect(
@@ -1404,12 +1402,11 @@ elif menu == "2. Tren Temporal Kualitas Udara":
             )
         )
         show_plot(fig_trend)
-        mini_note("Garis ambang membantu membaca kapan rata-rata ISPU mulai melewati batas kategori Sedang menuju Tidak Sehat.")
 
     with st.container(border=True):
         st.markdown("<div class='chart-title'>Persentase Tidak Sehat+ bulanan (1 tahun terakhir)</div>", unsafe_allow_html=True)
         st.markdown(
-            "<div class='chart-subtitle'>Membandingkan proporsi catatan Tidak Sehat atau lebih buruk per bulan pada 1 tahun terakhir dari data terfilter.</div>",
+            "<div class='chart-subtitle'>Membandingkan proporsi categori Tidak Sehat atau lebih buruk per bulan pada 1 tahun terakhir.</div>",
             unsafe_allow_html=True,
         )
 
@@ -1534,10 +1531,6 @@ elif menu == "2. Tren Temporal Kualitas Udara":
                 )
             )
             show_plot(fig_unhealthy_period)
-            mini_note(
-                f"Grafik ini selalu menggunakan agregasi bulanan pada 1 tahun terakhir dari data terfilter "
-                f"({pd.to_datetime(risk_start_date).strftime('%d %b %Y')} - {pd.to_datetime(latest_risk_date).strftime('%d %b %Y')})."
-            )
             risk_peak_temporal = risk_plot.loc[risk_plot["persen_tidak_sehat_plus"].idxmax()]
 
     direction = "meningkat/memburuk" if change > 0 else "menurun/membaik" if change < 0 else "relatif tetap"
@@ -1631,7 +1624,7 @@ elif menu == "3. Perbandingan Antar Stasiun":
         )
 
     mini_note(
-        f"Card, grafik perbandingan, distribusi kategori, dan tabel pada halaman ini dihitung dari 1 tahun terakhir dalam rentang filter aktif "
+        f"KPI utama dihitung dari 1 tahun terakhir dalam rentang "
         f"({pd.to_datetime(station_start_date).strftime('%d %b %Y')} - {pd.to_datetime(latest_date_station).strftime('%d %b %Y')})."
     )
 
@@ -1639,7 +1632,7 @@ elif menu == "3. Perbandingan Antar Stasiun":
     with col1:
         with st.container(border=True):
             st.markdown("<div class='chart-title'>Ranking rata-rata ISPU per stasiun</div>", unsafe_allow_html=True)
-            st.markdown("<div class='chart-subtitle'>Perbandingan rata-rata ISPU antar stasiun pada 1 tahun terakhir dari data terfilter.</div>", unsafe_allow_html=True)
+            st.markdown("<div class='chart-subtitle'>Perbandingan rata-rata ISPU antar stasiun pada 1 tahun terakhir.</div>", unsafe_allow_html=True)
             fig_station = px.bar(
                 station_summary,
                 x="rata_rata_ispu",
@@ -1666,7 +1659,7 @@ elif menu == "3. Perbandingan Antar Stasiun":
     with col2:
         with st.container(border=True):
             st.markdown("<div class='chart-title'>Persentase Tidak Sehat+ per stasiun</div>", unsafe_allow_html=True)
-            st.markdown("<div class='chart-subtitle'>Proporsi catatan Tidak Sehat atau lebih buruk per stasiun pada 1 tahun terakhir dari data terfilter.</div>", unsafe_allow_html=True)
+            st.markdown("<div class='chart-subtitle'>Proporsi catatan Tidak Sehat atau lebih buruk per stasiun pada 1 tahun terakhir.</div>", unsafe_allow_html=True)
             risk_station_df = station_summary.sort_values("persen_tidak_sehat_plus", ascending=False)
             fig_unhealthy_station = px.bar(
                 risk_station_df,
@@ -1693,7 +1686,7 @@ elif menu == "3. Perbandingan Antar Stasiun":
 
     with st.container(border=True):
         st.markdown("<div class='chart-title'>Distribusi kategori ISPU per stasiun</div>", unsafe_allow_html=True)
-        st.markdown("<div class='chart-subtitle'>Komposisi kategori ISPU per stasiun pada 1 tahun terakhir dari data terfilter.</div>", unsafe_allow_html=True)
+        st.markdown("<div class='chart-subtitle'>Komposisi kategori ISPU per stasiun pada 1 tahun terakhir.</div>", unsafe_allow_html=True)
         station_cat = (
             station_dff.groupby(["stasiun", "categori"], as_index=False)
             .size()
@@ -1811,7 +1804,7 @@ elif menu == "4. Parameter Pencemar Kritis":
         metric_card("Parameter terpantau", format_int(critical_unique), "Jumlah jenis pencemar kritis yang muncul pada 1 tahun terakhir.", "🧪", "#0891B2", "#CFFAFE")
 
     mini_note(
-        f"Card utama dan komposisi pencemar kritis dihitung dari 1 tahun terakhir dalam rentang filter aktif "
+        f"KPI utama dihitung dari 1 tahun terakhir dalam rentang "
         f"({pd.to_datetime(critical_start_date).strftime('%d %b %Y')} - {pd.to_datetime(critical_latest_date).strftime('%d %b %Y')})."
     )
 
@@ -1874,7 +1867,7 @@ elif menu == "4. Parameter Pencemar Kritis":
     with col2:
         with st.container(border=True):
             st.markdown("<div class='chart-title'>Komposisi pencemar kritis</div>", unsafe_allow_html=True)
-            st.markdown("<div class='chart-subtitle'>Proporsi masing-masing parameter sebagai pencemar kritis pada 1 tahun terakhir dari data terfilter.</div>", unsafe_allow_html=True)
+            st.markdown("<div class='chart-subtitle'>Proporsi masing-masing parameter sebagai pencemar kritis pada 1 tahun terakhir.</div>", unsafe_allow_html=True)
             if crit_counts_recent.empty:
                 st.info("Tidak ada data komposisi pencemar kritis pada 1 tahun terakhir.")
             else:
@@ -2080,7 +2073,7 @@ elif menu == "5. Pola Musiman Kualitas Udara":
     with c3:
         metric_card("Risiko bulanan tertinggi", str(highest_risk_month["nama_bulan"]), f"Tidak Sehat+ {format_percent(highest_risk_month['persen_tidak_sehat_plus'], 1)} · 1 tahun terakhir", "⚠️", "#F97316", "#FFEDD5")
 
-    mini_note(f"Card utama dihitung berdasarkan 1 tahun terakhir dari data terfilter ({seasonal_kpi_period_label}).")
+    mini_note(f"KPI utama dihitung dari 1 tahun terakhir dalam rentang ({seasonal_kpi_period_label}).")
 
     with st.container(border=True):
         st.markdown("<div class='chart-title'>Heatmap rata-rata ISPU bulanan per tahun</div>", unsafe_allow_html=True)
