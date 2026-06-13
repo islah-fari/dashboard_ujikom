@@ -193,7 +193,7 @@ st.markdown(
     .sidebar-brand-title {
         font-size: 1.05rem;
         font-weight: 900;
-        color: #FFFFFF !important;
+        color: #DDEBFF !important;
         letter-spacing: -0.02em;
         margin-bottom: 0.35rem;
     }
