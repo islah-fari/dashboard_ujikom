@@ -193,7 +193,7 @@ st.markdown(
     .sidebar-brand-title {
         font-size: 1.05rem;
         font-weight: 900;
-        color: #DDEBFF !important;
+        color: #FFFFFF !important;
         letter-spacing: -0.02em;
         margin-bottom: 0.35rem;
     }
@@ -619,6 +619,46 @@ st.markdown(
         margin-top: 0.6rem;
     }
 
+    .legend-card {
+        background: #FFFFFF;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 0.65rem 0.8rem;
+        margin: 0.35rem 0 0.65rem 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.55rem 0.9rem;
+        color: #0F172A !important;
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.035);
+    }
+
+    .legend-title-inline {
+        color: #334155 !important;
+        font-weight: 850;
+        font-size: 0.84rem;
+        margin-right: 0.2rem;
+    }
+
+    .legend-item-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.32rem;
+        color: #0F172A !important;
+        font-size: 0.82rem;
+        font-weight: 650;
+        white-space: nowrap;
+    }
+
+    .legend-swatch {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        display: inline-block;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        flex: 0 0 auto;
+    }
+
     .filter-summary {
         background: #FFFFFF;
         border: 1px solid var(--border);
@@ -787,6 +827,34 @@ def insight_card(text: str):
 
 def mini_note(text: str):
     st.markdown(f"<div class='mini-note'>{text}</div>", unsafe_allow_html=True)
+
+
+def color_legend(title: str, items: list[tuple[str, str]]):
+    """Render legend HTML ringan untuk visualisasi yang memakai warna manual."""
+    item_html = "".join(
+        f"<span class='legend-item-inline'><span class='legend-swatch' style='background:{color};'></span>{label}</span>"
+        for label, color in items
+    )
+    st.markdown(
+        f"<div class='legend-card'><span class='legend-title-inline'>{title}</span>{item_html}</div>",
+        unsafe_allow_html=True,
+    )
+
+
+ISPU_LEGEND_ITEMS = [
+    ("Baik (≤50)", CATEGORY_COLORS["BAIK"]),
+    ("Sedang (51–100)", CATEGORY_COLORS["SEDANG"]),
+    ("Tidak Sehat (101–200)", CATEGORY_COLORS["TIDAK SEHAT"]),
+    ("Sangat Tidak Sehat (201–300)", CATEGORY_COLORS["SANGAT TIDAK SEHAT"]),
+    ("Berbahaya (>300)", CATEGORY_COLORS["BERBAHAYA"]),
+]
+
+RISK_LEGEND_ITEMS = [
+    ("<10%", "#FACC15"),
+    ("10–20%", "#F97316"),
+    ("20–30%", "#DC2626"),
+    ("≥30%", "#7F1D1D"),
+]
 
 
 def render_html_table(df: pd.DataFrame, max_rows: int | None = None):
@@ -1012,6 +1080,7 @@ if menu == "1. Overview Kualitas Udara":
         "Ringkasan kondisi kualitas udara melalui KPI utama, distribusi kategori ISPU, pencemar kritis dominan, dan peta lokasi stasiun.",
     )
 
+
     # KPI utama dibuat fokus pada 1 tahun terakhir agar lebih relevan untuk stakeholder.
     # Visualisasi lain tetap memakai dff, yaitu data sesuai filter sidebar.
     latest_date = dff["tanggal"].max()
@@ -1031,7 +1100,7 @@ if menu == "1. Overview Kualitas Udara":
     with c1:
         metric_card("Rata-rata ISPU harian", format_number(avg_daily_ispu, 1), "Rata-rata nilai ISPU pada 1 tahun terakhir.", "📈", "#2563EB", "#DBEAFE")
     with c2:
-        metric_card("Tidak sehat+", format_percent(unhealthy_pct, 1), "Kategori Tidak Sehat atau lebih buruk pada 1 tahun terakhir.", "⚠️", "#F97316", "#FFEDD5")
+        metric_card("Tidak sehat+", format_percent(unhealthy_pct, 1), "Porsi catatan kategori Tidak Sehat atau lebih buruk pada 1 tahun terakhir.", "⚠️", "#F97316", "#FFEDD5")
     with c3:
         metric_card("Pencemar dominan", dominant_label, f"Muncul {format_int(dominant_count)} kali pada 1 tahun terakhir.", "🌫️", "#7C3AED", "#F3E8FF")
     with c4:
@@ -1200,8 +1269,28 @@ if menu == "1. Overview Kualitas Udara":
                 cliponaxis=False,
                 hovertemplate="Parameter=%{x}<br>Persentase=%{y:.1f}%<br>Kemunculan=%{customdata[0]}<br>Catatan tersedia=%{customdata[1]}<br>Data tersedia sejak=%{customdata[2]}<extra></extra>",
             )
-            fig_critical.update_layout(xaxis_title="Parameter pencemar kritis", yaxis_title="Persentase kemunculan (%)", showlegend=False)
-            show_plot(apply_common_layout(fig_critical))
+            fig_critical.update_layout(
+                xaxis_title="Parameter pencemar kritis",
+                yaxis_title="Persentase kemunculan (%)",
+                showlegend=True,
+                legend_title_text="Parameter",
+            )
+            fig_critical = apply_common_layout(fig_critical, legend_title="Parameter")
+            fig_critical.update_layout(
+                margin=dict(l=18, r=18, t=76, b=42),
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.08,
+                    xanchor="left",
+                    x=0,
+                    bgcolor="rgba(255,255,255,0)",
+                    borderwidth=0,
+                    font=dict(color="#0F172A", size=12),
+                    title=dict(font=dict(color="#0F172A", size=12)),
+                ),
+            )
+            show_plot(fig_critical)
 
     with bottom2:
         with st.container(border=True):
@@ -1283,7 +1372,7 @@ elif menu == "2. Tren Temporal Kualitas Udara":
         metric_card(
             "Perubahan",
             format_number(change, 1),
-            "Selisih rata-rata ISPU pada 1 tahun terakhir.",
+            "Selisih rata-rata ISPU akhir terhadap awal pada 1 tahun terakhir.",
             "↕️",
             "#F97316",
             "#FFEDD5",
@@ -1328,7 +1417,7 @@ elif menu == "2. Tren Temporal Kualitas Udara":
 
     with st.container(border=True):
         st.markdown("<div class='chart-title'>Tren rata-rata ISPU</div>", unsafe_allow_html=True)
-        st.markdown("<div class='chart-subtitle'>Menampilkan rata-rata seluruh stasiun. Pilih stasiun pembanding untuk melihat tren lokasi tertentu. Garis putus-putus menunjukkan ambang masuk kategori Tidak Sehat (ISPU > 100).</div>", unsafe_allow_html=True)
+        st.markdown("<div class='chart-subtitle'>Default menampilkan rata-rata seluruh stasiun. Pilih stasiun pembanding untuk melihat tren lokasi tertentu. Garis putus-putus menunjukkan ambang masuk kategori Tidak Sehat (ISPU > 100).</div>", unsafe_allow_html=True)
 
         station_compare_options = sorted(dff["stasiun"].dropna().unique().tolist())
         selected_compare_stations = st.multiselect(
@@ -1372,8 +1461,8 @@ elif menu == "2. Tren Temporal Kualitas Udara":
         fig_trend.update_layout(
             xaxis_title="Periode",
             yaxis_title="Rata-rata ISPU",
-            showlegend=bool(selected_compare_stations),
-            legend_title_text="",
+            showlegend=True,
+            legend_title_text="Seri",
         )
         fig_trend.add_hline(
             y=100,
@@ -1402,11 +1491,12 @@ elif menu == "2. Tren Temporal Kualitas Udara":
             )
         )
         show_plot(fig_trend)
+        mini_note("Garis ambang membantu membaca kapan rata-rata ISPU mulai melewati batas kategori Sedang menuju Tidak Sehat.")
 
     with st.container(border=True):
         st.markdown("<div class='chart-title'>Persentase Tidak Sehat+ bulanan (1 tahun terakhir)</div>", unsafe_allow_html=True)
         st.markdown(
-            "<div class='chart-subtitle'>Membandingkan proporsi categori Tidak Sehat atau lebih buruk per bulan pada 1 tahun terakhir.</div>",
+            "<div class='chart-subtitle'>Membandingkan proporsi catatan Tidak Sehat atau lebih buruk per bulan pada 1 tahun terakhir dari data terfilter.</div>",
             unsafe_allow_html=True,
         )
 
@@ -1452,6 +1542,8 @@ elif menu == "2. Tren Temporal Kualitas Udara":
             st.info("Tidak ada data risiko Tidak Sehat+ pada 1 tahun terakhir dari filter aktif.")
             risk_peak_temporal = None
         else:
+            if not selected_compare_stations:
+                color_legend("Legenda risiko Tidak Sehat+", RISK_LEGEND_ITEMS)
             # Paksa semua bulan tampil di sumbu X agar tidak ada label bulan yang tersembunyi otomatis.
             month_labels = (
                 risk_plot[["periode_bulanan_plot", "bulan_tampil"]]
@@ -1531,6 +1623,10 @@ elif menu == "2. Tren Temporal Kualitas Udara":
                 )
             )
             show_plot(fig_unhealthy_period)
+            mini_note(
+                f"Grafik ini selalu menggunakan agregasi bulanan pada 1 tahun terakhir dari data terfilter "
+                f"({pd.to_datetime(risk_start_date).strftime('%d %b %Y')} - {pd.to_datetime(latest_risk_date).strftime('%d %b %Y')})."
+            )
             risk_peak_temporal = risk_plot.loc[risk_plot["persen_tidak_sehat_plus"].idxmax()]
 
     direction = "meningkat/memburuk" if change > 0 else "menurun/membaik" if change < 0 else "relatif tetap"
@@ -1632,7 +1728,7 @@ elif menu == "3. Perbandingan Antar Stasiun":
     with col1:
         with st.container(border=True):
             st.markdown("<div class='chart-title'>Ranking rata-rata ISPU per stasiun</div>", unsafe_allow_html=True)
-            st.markdown("<div class='chart-subtitle'>Perbandingan rata-rata ISPU antar stasiun pada 1 tahun terakhir.</div>", unsafe_allow_html=True)
+            st.markdown("<div class='chart-subtitle'>Perbandingan rata-rata ISPU antar stasiun pada 1 tahun terakhir dari data terfilter.</div>", unsafe_allow_html=True)
             fig_station = px.bar(
                 station_summary,
                 x="rata_rata_ispu",
@@ -1659,7 +1755,8 @@ elif menu == "3. Perbandingan Antar Stasiun":
     with col2:
         with st.container(border=True):
             st.markdown("<div class='chart-title'>Persentase Tidak Sehat+ per stasiun</div>", unsafe_allow_html=True)
-            st.markdown("<div class='chart-subtitle'>Proporsi catatan Tidak Sehat atau lebih buruk per stasiun pada 1 tahun terakhir.</div>", unsafe_allow_html=True)
+            st.markdown("<div class='chart-subtitle'>Proporsi catatan Tidak Sehat atau lebih buruk per stasiun pada 1 tahun terakhir dari data terfilter.</div>", unsafe_allow_html=True)
+            color_legend("Legenda risiko Tidak Sehat+", RISK_LEGEND_ITEMS)
             risk_station_df = station_summary.sort_values("persen_tidak_sehat_plus", ascending=False)
             fig_unhealthy_station = px.bar(
                 risk_station_df,
@@ -1686,7 +1783,7 @@ elif menu == "3. Perbandingan Antar Stasiun":
 
     with st.container(border=True):
         st.markdown("<div class='chart-title'>Distribusi kategori ISPU per stasiun</div>", unsafe_allow_html=True)
-        st.markdown("<div class='chart-subtitle'>Komposisi kategori ISPU per stasiun pada 1 tahun terakhir.</div>", unsafe_allow_html=True)
+        st.markdown("<div class='chart-subtitle'>Komposisi kategori ISPU per stasiun pada 1 tahun terakhir dari data terfilter.</div>", unsafe_allow_html=True)
         station_cat = (
             station_dff.groupby(["stasiun", "categori"], as_index=False)
             .size()
@@ -1861,13 +1958,33 @@ elif menu == "4. Parameter Pencemar Kritis":
                     cliponaxis=False,
                     hovertemplate="Parameter=%{x}<br>Persentase=%{y:.1f}%<br>Kemunculan sebagai kritis=%{customdata[0]}<br>Catatan tersedia=%{customdata[1]}<br>Data tersedia sejak=%{customdata[2]}<extra></extra>",
                 )
-                fig_crit_dist.update_layout(xaxis_title="Parameter", yaxis_title="Persentase kemunculan (%)", showlegend=False)
-                show_plot(apply_common_layout(fig_crit_dist))
+                fig_crit_dist.update_layout(
+                    xaxis_title="Parameter",
+                    yaxis_title="Persentase kemunculan (%)",
+                    showlegend=True,
+                    legend_title_text="Parameter",
+                )
+                fig_crit_dist = apply_common_layout(fig_crit_dist, legend_title="Parameter")
+                fig_crit_dist.update_layout(
+                    margin=dict(l=18, r=18, t=76, b=42),
+                    legend=dict(
+                        orientation="h",
+                        yanchor="bottom",
+                        y=1.08,
+                        xanchor="left",
+                        x=0,
+                        bgcolor="rgba(255,255,255,0)",
+                        borderwidth=0,
+                        font=dict(color="#0F172A", size=12),
+                        title=dict(font=dict(color="#0F172A", size=12)),
+                    ),
+                )
+                show_plot(fig_crit_dist)
 
     with col2:
         with st.container(border=True):
             st.markdown("<div class='chart-title'>Komposisi pencemar kritis</div>", unsafe_allow_html=True)
-            st.markdown("<div class='chart-subtitle'>Proporsi masing-masing parameter sebagai pencemar kritis pada 1 tahun terakhir.</div>", unsafe_allow_html=True)
+            st.markdown("<div class='chart-subtitle'>Proporsi masing-masing parameter sebagai pencemar kritis pada 1 tahun terakhir dari data terfilter.</div>", unsafe_allow_html=True)
             if crit_counts_recent.empty:
                 st.info("Tidak ada data komposisi pencemar kritis pada 1 tahun terakhir.")
             else:
@@ -1882,7 +1999,22 @@ elif menu == "4. Parameter Pencemar Kritis":
                     color_discrete_map=CRITICAL_COLORS,
                 )
                 fig_crit_pie.update_traces(textposition="inside", textinfo="percent+label", textfont_size=12)
-                fig_crit_pie.update_layout(showlegend=False, margin=dict(l=10, r=10, t=20, b=20))
+                fig_crit_pie.update_layout(
+                    showlegend=True,
+                    legend_title_text="Parameter",
+                    margin=dict(l=10, r=10, t=60, b=20),
+                    legend=dict(
+                        orientation="h",
+                        yanchor="bottom",
+                        y=1.06,
+                        xanchor="left",
+                        x=0,
+                        bgcolor="rgba(255,255,255,0)",
+                        borderwidth=0,
+                        font=dict(color="#0F172A", size=12),
+                        title=dict(font=dict(color="#0F172A", size=12)),
+                    ),
+                )
                 show_plot(apply_common_layout(fig_crit_pie))
 
     with st.container(border=True):
@@ -2130,6 +2262,7 @@ elif menu == "5. Pola Musiman Kualitas Udara":
         with st.container(border=True):
             st.markdown("<div class='chart-title'>Persentase Tidak Sehat+ per bulan</div>", unsafe_allow_html=True)
             st.markdown("<div class='chart-subtitle'>Mengukur seberapa sering kategori Tidak Sehat atau lebih buruk muncul pada setiap bulan kalender.</div>", unsafe_allow_html=True)
+            color_legend("Legenda risiko Tidak Sehat+", RISK_LEGEND_ITEMS)
             fig_month_bad = px.bar(
                 monthly_pattern,
                 x="bulan_label",
